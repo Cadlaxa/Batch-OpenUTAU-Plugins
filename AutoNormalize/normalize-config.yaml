@@ -1,0 +1,147 @@
+%YAML 1.2
+---
+symbols:
+  - {symbol: a, type: vowel}
+  - {symbol: aa, type: vowel}
+  - {symbol: ax, type: vowel}
+  - {symbol: ae, type: vowel}
+  - {symbol: ah, type: vowel}
+  - {symbol: ao, type: vowel}
+  - {symbol: aw, type: vowel}
+  - {symbol: ay, type: vowel}
+  - {symbol: b, type: stop}
+  - {symbol: by, type: stop}
+  - {symbol: bw, type: stop}
+  - {symbol: ch, type: affricate}
+  - {symbol: d, type: stop}
+  - {symbol: dy, type: stop}
+  - {symbol: dw, type: stop}
+  - {symbol: dh, type: fricative}
+  - {symbol: dx, type: tap}
+  - {symbol: dr, type: fricative}
+  - {symbol: e, type: vowel}
+  - {symbol: eh, type: vowel}
+  - {symbol: er, type: vowel}
+  - {symbol: ey, type: vowel}
+  - {symbol: f, type: fricative}
+  - {symbol: g, type: stop}
+  - {symbol: gy, type: stop}
+  - {symbol: gw, type: stop}
+  - {symbol: hh, type: aspirate}
+  - {symbol: h, type: aspirate}
+  - {symbol: hy, type: aspirate}
+  - {symbol: hw, type: aspirate}
+  - {symbol: i, type: vowel}
+  - {symbol: ih, type: vowel}
+  - {symbol: iy, type: vowel}
+  - {symbol: jh, type: affricate}
+  - {symbol: j, type: affricate}
+  - {symbol: jy, type: affricate}
+  - {symbol: jw, type: affricate}
+  - {symbol: k, type: stop}
+  - {symbol: ky, type: stop}
+  - {symbol: kw, type: stop}
+  - {symbol: kr, type: stop}
+  - {symbol: l, type: liquid}
+  - {symbol: m, type: nasal}
+  - {symbol: my, type: nasal}
+  - {symbol: mw, type: nasal}
+  - {symbol: n, type: nasal}
+  - {symbol: ny, type: nasal}
+  - {symbol: nw, type: nasal}
+  - {symbol: ng, type: nasal}
+  - {symbol: o, type: vowel}
+  - {symbol: ow, type: vowel}
+  - {symbol: oy, type: vowel}
+  - {symbol: p, type: stop}
+  - {symbol: py, type: stop}
+  - {symbol: pw, type: stop}
+  - {symbol: q, type: stop}
+  - {symbol: vf, type: fricative}
+  - {symbol: r, type: liquid}
+  - {symbol: ry, type: liquid}
+  - {symbol: s, type: fricative}
+  - {symbol: st, type: fricative}
+  - {symbol: sh, type: fricative}
+  - {symbol: t, type: stop}
+  - {symbol: ts, type: fricative}
+  - {symbol: ty, type: stop}
+  - {symbol: tw, type: stop}
+  - {symbol: th, type: fricative}
+  - {symbol: tr, type: fricative}
+  - {symbol: u, type: vowel}
+  - {symbol: uh, type: vowel}
+  - {symbol: uw, type: vowel}
+  - {symbol: v, type: fricative}
+  - {symbol: w, type: semivowel}
+  - {symbol: y, type: semivowel}
+  - {symbol: z, type: fricative}
+  - {symbol: zh, type: fricative}
+  - {symbol: br, type: fricative}
+  - {symbol: ar, type: vowel}
+  - {symbol: air, type: vowel}
+  - {symbol: or, type: vowel}
+  - {symbol: ir, type: vowel}
+  - {symbol: ur, type: vowel}
+  - {symbol: al, type: vowel}
+  - {symbol: el, type: vowel}
+  - {symbol: il, type: vowel}
+  - {symbol: ol, type: vowel}
+  - {symbol: ul, type: vowel}
+  - {symbol: ix, type: vowel}
+  - {symbol: ea, type: vowel}
+  - {symbol: ean, type: vowel}
+  - {symbol: eam, type: vowel}
+  - {symbol: eang, type: vowel}
+  - {symbol: A, type: vowel}
+  - {symbol: E, type: vowel}
+  - {symbol: I, type: vowel}
+  - {symbol: O, type: vowel}
+  - {symbol: U, type: vowel}
+  - {symbol: N, type: vowel}
+  - {symbol: '@r', type: vowel}
+  - {symbol: rr, type: liquid}
+  - {symbol: ll, type: liquid}
+  - {symbol: AP, type: vowel}
+  - {symbol: SP, type: vowel}
+  - {symbol: B, type: stop}
+  - {symbol: CH, type: affricate }
+  - {symbol: D, type: stop}
+  - {symbol: G, type: stop}
+  - {symbol: J, type: affricate}
+  - {symbol: JJ, type: affricate}
+  - {symbol: K, type: stop}
+  - {symbol: P, type: stop}
+  - {symbol: T, type: stop}
+  - {symbol: S, type: fricative}
+  - {symbol: SH, type: fricative}
+  - {symbol: BY, type: stop}
+  - {symbol: DY, type: stop}
+  - {symbol: GY, type: stop}
+  - {symbol: KY, type: stop}
+  - {symbol: PY, type: stop}
+  - {symbol: TY, type: stop}
+  - {symbol: Z, type: fricative}
+  - {symbol: TS, type: fricative}
+  - {symbol: '-', type: ending}
+  - {symbol: R, type: ending}
+
+values:
+  - {type: vowel, value: 86}
+  - {type: stop, value: 10}
+  - {type: affricate, value: 10}
+  - {type: fricative, value: 15}
+  - {type: nasal, value: 10}
+  - {type: liquid , value: 10}
+  - {type: semivowel, value: 10}
+  - {type: ending, value: 60}
+
+specific_values:
+  - {alias: 'k -', value: 0}
+  - {alias: 't -', value: 0}
+  - {alias: 'g -', value: 0}
+  - {alias: 'b -', value: 0}
+  - {alias: 'p -', value: 0}
+  - {alias: 'd -', value: 0}
+  - {alias: 'ch -', value: 10}
+  - {alias: 'jh -', value: 10}
