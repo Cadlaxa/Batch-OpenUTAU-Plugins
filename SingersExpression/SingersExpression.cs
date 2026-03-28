@@ -84,6 +84,47 @@ public class SingersExpressionPlugin : BatchEdit {
         }
 
         docManager.StartUndoGroup("command.batch.plugin", true);
+
+        foreach (var kvp in currentConfig.expressions) {
+            var expr = kvp.Value;
+            string abbr = expr.abbr ?? kvp.Key;
+
+            UExpressionType expType = UExpressionType.Numerical;
+            if (string.Equals(expr.type, "Options", StringComparison.OrdinalIgnoreCase)) {
+                expType = UExpressionType.Options;
+            } else if (string.Equals(expr.type, "Curve", StringComparison.OrdinalIgnoreCase)) {
+                expType = UExpressionType.Curve;
+            }
+
+            if (project.expressions.TryGetValue(abbr, out var existingDescriptor)) {
+                // UPDATE EXISTING: Override the min, max, default values, and type
+                existingDescriptor.min = expr.min;
+                existingDescriptor.max = expr.max;
+                existingDescriptor.defaultValue = expr.default_value;
+                existingDescriptor.name = expr.name;
+                existingDescriptor.type = expType;
+                existingDescriptor.isFlag = expr.is_flag;
+                existingDescriptor.flag = expr.flag;
+                
+                if (expr.options != null && expr.options.Count > 0) {
+                    existingDescriptor.options = expr.options.ToArray();
+                }
+            } else {
+                var descriptor = new UExpressionDescriptor(expr.name, abbr, expr.min, expr.max, expr.default_value) {
+                    type = expType,
+                    isFlag = expr.is_flag,
+                    flag = expr.flag
+                };
+
+                if (expr.options != null && expr.options.Count > 0) {
+                    descriptor.options = expr.options.ToArray();
+                }
+
+                project.expressions.Add(abbr, descriptor);
+                Log.Information($"[SingersExpression] Registered new expression: {expr.name} ({abbr})");
+            }
+        }
+
         int modifiedCount = 0;
 
         foreach (var note in notes) {
@@ -94,33 +135,10 @@ public class SingersExpressionPlugin : BatchEdit {
                 var expr = kvp.Value;
                 string abbr = expr.abbr ?? kvp.Key;
 
-                // If it doesn't exist, create it
-                if (!project.expressions.ContainsKey(abbr)) {
-                    
-                    UExpressionType expType = UExpressionType.Numerical;
-                    if (string.Equals(expr.type, "Options", StringComparison.OrdinalIgnoreCase)) {
-                        expType = UExpressionType.Options;
-                    } else if (string.Equals(expr.type, "Curve", StringComparison.OrdinalIgnoreCase)) {
-                        expType = UExpressionType.Curve;
-                    }
-
-                    var descriptor = new UExpressionDescriptor(expr.name, abbr, expr.min, expr.max, expr.default_value) {
-                        type = expType,
-                        isFlag = expr.is_flag,
-                        flag = expr.flag
-                    };
-
-                    if (expr.options != null && expr.options.Count > 0) {
-                        descriptor.options = expr.options.ToArray();
-                    }
-
-                    project.expressions.Add(abbr, descriptor);
-                    
-                    Log.Information($"[SingersExpression] Registered new expression: {expr.name} ({abbr})");
+                if (string.Equals(expr.type, "Curve", StringComparison.OrdinalIgnoreCase)) {
+                    continue; 
                 }
 
-                // Because this is a manual Batch Edit, this intentionally overwrite the existing notes 
-                // so the user can easily "reset" notes back to their default values by clicking the plugin.
                 float?[] pValues = new float?[notePhonemes.Count];
                 for (int i = 0; i < notePhonemes.Count; i++) {
                     pValues[i] = expr.default_value;
