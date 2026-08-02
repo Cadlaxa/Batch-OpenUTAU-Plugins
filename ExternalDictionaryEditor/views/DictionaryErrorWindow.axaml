@@ -1,13 +1,8 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:ExternalDictionaryEditor.viewmodel"
         x:Class="ExternalDictionaryEditor.views.DictionaryErrorWindow"
-        x:DataType="vm:DictionaryErrorWindowViewModel"
         Title="{Binding ErrorTitle}"
-        Width="650" SizeToContent="Height"
-        WindowStartupLocation="CenterOwner"
-        Icon="/Assets/open-utau.ico"
-        Loaded="Window_Loaded">
+        Width="600" Height="400">
 
     <Border Padding="20">
         <Grid RowDefinitions="Auto, *, Auto">
