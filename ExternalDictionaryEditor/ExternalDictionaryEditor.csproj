@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OpenUtau.Core\OpenUtau.Core.csproj" />
+    <ProjectReference Include="..\OpenUtau\OpenUtau.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Update="control\**.axaml" />
+    <AvaloniaResource Update="views\**.axaml" />
+    <AvaloniaResource Include="Strings.axaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ReactiveUI.Fody" Version="19.5.41" />
+  </ItemGroup>
+
+</Project>
