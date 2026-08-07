@@ -33,7 +33,7 @@ public class PhonemeConfig {
 }
 
 public class AutoNormalizePFlag : BatchEdit {
-    public virtual string Name => "Batch Auto Normalize (P Flag)";
+    public virtual string Name => "Batch Auto Normalize (P Flag) v1.1";
 
     private PhonemeConfig LoadConfig(string path) {
         if (!File.Exists(path)) return null;
@@ -91,22 +91,38 @@ public class AutoNormalizePFlag : BatchEdit {
         return cleanAlias.Trim();
     }
 
+    // Checks specific_values prior to standard evaluation logic
+    private float? GetSpecificValue(string rawAlias, string cleanAlias, PhonemeConfig config) {
+        if (config == null || config.specific_values == null) return null;
+
+        // 1. Try whole exact match (including suffix/prefix)
+        var exactSpecific = config.specific_values.FirstOrDefault(x => string.Equals(x.alias, rawAlias, StringComparison.Ordinal));
+        if (exactSpecific != null) return exactSpecific.value;
+
+        // 2. Fallback: Try cleaned alias match (old method)
+        var cleanSpecific = config.specific_values.FirstOrDefault(x => string.Equals(x.alias, cleanAlias, StringComparison.Ordinal));
+        if (cleanSpecific != null) return cleanSpecific.value;
+
+        return null;
+    }
+
     private bool CheckIfVC(string cleanAlias, PhonemeConfig config) {
         if (string.IsNullOrWhiteSpace(cleanAlias) || config == null) return false;
 
         var parts = cleanAlias.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
         
-        var validParts = parts.Where(p => GetSymbolType(p, config) != null).ToList();
-        if (validParts.Count < 2) return false; 
+        // Strip leading boundary/ending symbols (like '-' in '- a')
+        var coreParts = parts.Where(p => GetSymbolType(p, config) != "ending").ToList();
+        if (coreParts.Count < 2) return false; 
 
-        string firstType = GetSymbolType(validParts[0], config);
-        string lastType = GetSymbolType(validParts[validParts.Count - 1], config);
+        string firstType = GetSymbolType(coreParts[0], config);
+        string lastType = GetSymbolType(coreParts[coreParts.Count - 1], config);
 
-        return firstType == "vowel" && lastType != "vowel" && lastType != "ending";
+        return firstType == "vowel" && lastType != "vowel";
     }
 
     private string GetSymbolType(string sym, PhonemeConfig config) {
-        return config?.symbols?.FirstOrDefault(x => string.Equals(x.symbol.Trim(), sym.Trim(), StringComparison.OrdinalIgnoreCase))?.type;
+        return config?.symbols?.FirstOrDefault(x => string.Equals(x.symbol.Trim(), sym.Trim(), StringComparison.Ordinal))?.type;
     }
 
     private float? GetTypeValue(string type, PhonemeConfig config) {
@@ -128,7 +144,6 @@ public class AutoNormalizePFlag : BatchEdit {
         string pluginDir = PathManager.Inst.PluginsPath; 
         string defaultConfigPath = Path.Combine(pluginDir, "normalize-config.yaml");
 
-        // If the config isn't in the root Plugins folder, scan all subfolders to find it
         if (!File.Exists(defaultConfigPath)) {
             try {
                 string[] searchResults = Directory.GetFiles(pluginDir, "normalize-config.yaml", SearchOption.AllDirectories);
@@ -162,33 +177,37 @@ public class AutoNormalizePFlag : BatchEdit {
 
             float?[] pValues = new float?[notePhonemes.Count];
 
+            float baseFallback = GetTypeValue("vowel", currentConfig) ?? 86f;
+
             for (int i = 0; i < notePhonemes.Count; i++) {
                 string rawAlias = notePhonemes[i].phoneme;
                 string cleanAlias = GetPureAlias(rawAlias, singer);
                 
-                // If it is a VC, calculate the average between its symbols
-                if (CheckIfVC(cleanAlias, currentConfig)) {
-                    var parts = cleanAlias.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                // 1. Check Specific Values first (exact raw alias override)
+                float? specificVal = GetSpecificValue(rawAlias, cleanAlias, currentConfig);
+                
+                if (specificVal.HasValue) {
+                    pValues[i] = specificVal.Value;
+                }
+                // 2. If it is a VC, calculate the average between its symbols
+                else if (CheckIfVC(cleanAlias, currentConfig)) {
+                    var parts = cleanAlias.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                                           .Where(p => GetSymbolType(p, currentConfig) != "ending")
+                                           .ToArray();
                     
                     string firstType = GetSymbolType(parts[0], currentConfig);
                     string lastType = GetSymbolType(parts[parts.Length - 1], currentConfig);
 
-                    float prevValue = GetTypeValue(firstType, currentConfig) ?? 86f; // Vowel value
-                    float nextValue = GetTypeValue(lastType, currentConfig) ?? 86f;  // Consonant value
+                    float prevValue = GetTypeValue(firstType, currentConfig) ?? baseFallback;
+                    float nextValue = GetTypeValue(lastType, currentConfig) ?? baseFallback;
                     
-                    // Math: (Vowel + Consonant) / 2
                     float middleValue = ((prevValue + nextValue) / 2f);
-                    
                     pValues[i] = Math.Min(100f, middleValue);
-
-                    /*if (modifiedCount < 5) {
-                        Log.Information($"[AutoNormalize-VC] '{rawAlias}' -> Clean: '{cleanAlias}' | Averaged {prevValue} and {nextValue} + 20 -> Result: {pValues[i]}");
-                    }*/
                 } 
-                // tandard priority logic
+                // 3. Standard priority logic fallback
                 else {
                     float? flagValue = GetStandardAliasValue(cleanAlias, currentConfig);
-                    pValues[i] = flagValue ?? 86f; 
+                    pValues[i] = flagValue ?? baseFallback; 
                 }
             }
 
@@ -204,22 +223,29 @@ public class AutoNormalizePFlag : BatchEdit {
     private float? GetStandardAliasValue(string cleanAlias, PhonemeConfig config) {
         if (string.IsNullOrWhiteSpace(cleanAlias) || config == null) return null;
 
-        var specific = config.specific_values?.FirstOrDefault(x => string.Equals(x.alias, cleanAlias, StringComparison.Ordinal));
-        if (specific != null) return specific.value;
-
         var parts = cleanAlias.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length == 0) return null;
 
-        var validParts = parts.Where(p => GetSymbolType(p, config) != null).ToList();
-        if (validParts.Count == 0) return null;
+        // 1. STRICT ENDING CHECK: Only apply ending value if the VERY LAST token in the alias is of type 'ending'
+        string absoluteLastToken = parts[parts.Length - 1];
+        if (GetSymbolType(absoluteLastToken, config) == "ending") {
+            return GetTypeValue("ending", config);
+        }
 
-        string firstType = GetSymbolType(validParts[0], config);
-        string lastType = GetSymbolType(validParts[validParts.Count - 1], config);
+        // 2. Filter out any leading/boundary 'ending' symbols (e.g. '-' in '- a' or '- ta') for phoneme type evaluation
+        var nonEndingParts = parts.Where(p => GetSymbolType(p, config) != "ending").ToList();
+        if (nonEndingParts.Count == 0) return null;
 
-        string actualLastString = parts[parts.Length - 1];
-        string actualLastType = GetSymbolType(actualLastString, config);
+        var validTypes = nonEndingParts
+            .Select(p => GetSymbolType(p, config))
+            .Where(t => t != null)
+            .ToList();
 
-        if (actualLastType == "ending") return GetTypeValue("ending", config);
+        if (validTypes.Count == 0) return null;
+
+        string firstType = validTypes[0];
+        string lastType = validTypes[validTypes.Count - 1];
+
         if (lastType == "vowel") return GetTypeValue("vowel", config);
         if (firstType == "vowel") return GetTypeValue("vowel", config);
 
